@@ -31,8 +31,16 @@ const ProposalBuilder = () => {
     setLoading(true)
     setError(null)
     try {
-      const proposalData = await proposalService.getById(parseInt(id))
-      setProposal(proposalData)
+const proposalData = await proposalService.getById(parseInt(id))
+      // Transform data to include required fields
+      const transformedProposal = {
+        ...proposalData,
+        rfpId: proposalData.rfp_id || proposalData.rfpId,
+        title: proposalData.title || proposalData.Name,
+        createdDate: proposalData.created_date || proposalData.createdDate,
+        sections: proposalData.sections || []
+      }
+      setProposal(transformedProposal)
       
       // Load the associated RFP document
       if (proposalData.rfpId) {
@@ -179,7 +187,7 @@ ${proposal.budget?.items?.map(item => `- ${item.description}: ${item.quantity} x
               <div className="flex items-center gap-4 text-sm text-surface-600">
                 <div className="flex items-center gap-1">
                   <ApperIcon name="Calendar" className="w-4 h-4" />
-                  <span>Created {new Date(proposal.createdDate).toLocaleDateString()}</span>
+<span>Created {new Date(proposal.created_date || proposal.createdDate).toLocaleDateString()}</span>
                 </div>
                 <Badge variant="primary" size="sm">
                   {proposal.status}

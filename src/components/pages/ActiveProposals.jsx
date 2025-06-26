@@ -1,15 +1,17 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { toast } from 'react-toastify'
-import ApperIcon from '@/components/ApperIcon'
-import ProposalCard from '@/components/molecules/ProposalCard'
-import SkeletonLoader from '@/components/molecules/SkeletonLoader'
-import EmptyState from '@/components/molecules/EmptyState'
-import ErrorState from '@/components/molecules/ErrorState'
-import Button from '@/components/atoms/Button'
-import Badge from '@/components/atoms/Badge'
-import proposalService from '@/services/api/proposalService'
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { toast } from "react-toastify";
+import proposalService from "@/services/api/proposalService";
+import ApperIcon from "@/components/ApperIcon";
+import Templates from "@/components/pages/Templates";
+import Upload from "@/components/pages/Upload";
+import SkeletonLoader from "@/components/molecules/SkeletonLoader";
+import EmptyState from "@/components/molecules/EmptyState";
+import ErrorState from "@/components/molecules/ErrorState";
+import ProposalCard from "@/components/molecules/ProposalCard";
+import Badge from "@/components/atoms/Badge";
+import Button from "@/components/atoms/Button";
 
 const ActiveProposals = () => {
   const navigate = useNavigate()
@@ -26,8 +28,16 @@ const ActiveProposals = () => {
     setLoading(true)
     setError(null)
     try {
-      const result = await proposalService.getAll()
-      setProposals(result)
+const result = await proposalService.getAll()
+      // Transform data to include required fields
+      const transformedProposals = result.map(proposal => ({
+        ...proposal,
+        rfpId: proposal.rfp_id || proposal.rfpId,
+        title: proposal.title || proposal.Name,
+        createdDate: proposal.created_date || proposal.createdDate,
+        sections: proposal.sections || []
+      }))
+      setProposals(transformedProposals)
     } catch (err) {
       setError(err.message || 'Failed to load proposals')
       toast.error('Failed to load proposals')
@@ -175,10 +185,10 @@ const ActiveProposals = () => {
         <div className="bg-white rounded-lg border border-surface-200 p-4">
           <div className="text-2xl font-bold text-info">{statusCounts.submitted}</div>
           <div className="text-sm text-surface-600">Submitted</div>
-        </div>
+</div>
       </motion.div>
 
-      {/* Filters */}
+      {/* Filter Tabs */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

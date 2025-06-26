@@ -1,18 +1,26 @@
-import { useState } from 'react'
+import { useState, useContext } from 'react'
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useSelector } from 'react-redux'
 import ApperIcon from '@/components/ApperIcon'
+import Button from '@/components/atoms/Button'
 import { routes } from '@/config/routes'
-
+import { AuthContext } from './App'
 const Layout = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const location = useLocation()
+  const { user } = useSelector((state) => state.user)
+  const { logout } = useContext(AuthContext)
 
   const navigationItems = Object.values(routes).filter(route => 
     !route.path.includes(':') // Filter out dynamic routes from navigation
   )
 
   const closeMobileMenu = () => setIsMobileMenuOpen(false)
+
+  const handleLogout = async () => {
+    await logout()
+  }
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-white">
@@ -24,12 +32,21 @@ const Layout = () => {
           </div>
           <h1 className="text-xl font-display font-bold text-secondary">ProposalCraft</h1>
         </div>
-        <button
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="p-2 text-surface-600 hover:text-secondary transition-colors"
-        >
-          <ApperIcon name={isMobileMenuOpen ? "X" : "Menu"} className="w-6 h-6" />
-        </button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            icon="LogOut"
+            onClick={handleLogout}
+            className="text-surface-600 hover:text-error"
+          />
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="p-2 text-surface-600 hover:text-secondary transition-colors"
+          >
+            <ApperIcon name={isMobileMenuOpen ? "X" : "Menu"} className="w-6 h-6" />
+          </button>
+        </div>
       </header>
 
       <div className="flex-1 flex overflow-hidden">
@@ -45,6 +62,16 @@ const Layout = () => {
                 <p className="text-sm text-surface-600">Intelligent Proposals</p>
               </div>
             </div>
+            {user && (
+              <div className="mt-4 p-3 bg-white rounded-lg border border-surface-200">
+                <div className="text-sm font-medium text-secondary truncate">
+                  {user.firstName} {user.lastName}
+                </div>
+                <div className="text-xs text-surface-600 truncate">
+                  {user.emailAddress}
+                </div>
+              </div>
+            )}
           </div>
           
           <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
@@ -65,6 +92,17 @@ const Layout = () => {
               </NavLink>
             ))}
           </nav>
+
+          <div className="p-4 border-t border-surface-200">
+            <Button
+              variant="ghost"
+              icon="LogOut"
+              onClick={handleLogout}
+              className="w-full justify-start text-surface-600 hover:text-error hover:bg-error/10"
+            >
+              Sign Out
+            </Button>
+          </div>
         </aside>
 
         {/* Mobile Menu Overlay */}
@@ -85,7 +123,7 @@ const Layout = () => {
                 transition={{ type: 'tween', duration: 0.3 }}
                 className="lg:hidden fixed left-0 top-16 bottom-0 w-80 bg-surface-50 border-r border-surface-200 z-50"
               >
-                <nav className="p-4 space-y-2">
+<nav className="p-4 space-y-2">
                   {navigationItems.map((item) => (
                     <NavLink
                       key={item.id}
@@ -103,6 +141,19 @@ const Layout = () => {
                       <span>{item.label}</span>
                     </NavLink>
                   ))}
+                  <div className="pt-4 border-t border-surface-200 mt-4">
+                    <Button
+                      variant="ghost"
+                      icon="LogOut"
+                      onClick={() => {
+                        closeMobileMenu()
+                        handleLogout()
+                      }}
+                      className="w-full justify-start text-surface-600 hover:text-error hover:bg-error/10"
+                    >
+                      Sign Out
+                    </Button>
+                  </div>
                 </nav>
               </motion.div>
             </>

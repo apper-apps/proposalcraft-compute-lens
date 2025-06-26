@@ -28,8 +28,15 @@ const Upload = () => {
     setLoading(true)
     setError(null)
     try {
-      const result = await rfpDocumentService.getAll()
-      setDocuments(result)
+const result = await rfpDocumentService.getAll()
+      // Transform data to include required fields
+      const transformedDocuments = result.map(doc => ({
+        ...doc,
+        uploadDate: doc.upload_date || doc.uploadDate,
+        budgetInfo: doc.budget_info ? (typeof doc.budget_info === 'string' ? JSON.parse(doc.budget_info) : doc.budget_info) : {},
+        requirements: doc.requirements ? (Array.isArray(doc.requirements) ? doc.requirements : doc.requirements.split('\n')) : []
+      }))
+      setDocuments(transformedDocuments)
     } catch (err) {
       setError(err.message || 'Failed to load documents')
       toast.error('Failed to load documents')

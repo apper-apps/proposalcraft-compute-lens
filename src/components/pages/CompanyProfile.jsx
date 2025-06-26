@@ -19,7 +19,7 @@ const CompanyProfile = () => {
   const loadProfile = async () => {
     setLoading(true)
     setError(null)
-    try {
+try {
       const result = await companyProfileService.get()
       setProfile(result)
     } catch (err) {
@@ -109,22 +109,22 @@ const CompanyProfile = () => {
         {profile && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-surface-200">
             <div className="text-center">
-              <div className="text-2xl font-bold text-primary">
-                {profile.capabilities?.length || 0}
+<div className="text-2xl font-bold text-primary">
+                {profile.Tags ? profile.Tags.split(',').length : 0}
               </div>
               <div className="text-sm text-surface-600">Capabilities</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-accent">
-                {profile.certifications?.length || 0}
+<div className="text-2xl font-bold text-accent">
+                {profile.Name ? 1 : 0}
               </div>
-              <div className="text-sm text-surface-600">Certifications</div>
+<div className="text-sm text-surface-600">Profile Data</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-info">
-                {profile.yearsInBusiness || 0}
+<div className="text-2xl font-bold text-info">
+                {profile.updated_date ? new Date(profile.updated_date).getFullYear() : new Date().getFullYear()}
               </div>
-              <div className="text-sm text-surface-600">Years in Business</div>
+<div className="text-sm text-surface-600">Last Updated</div>
             </div>
           </div>
         )}

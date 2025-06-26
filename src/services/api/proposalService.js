@@ -1,64 +1,239 @@
+import { toast } from 'react-toastify'
+
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
-let proposals = []
+// Initialize ApperClient
+const getApperClient = () => {
+  const { ApperClient } = window.ApperSDK
+  return new ApperClient({
+    apperProjectId: import.meta.env.VITE_APPER_PROJECT_ID,
+    apperPublicKey: import.meta.env.VITE_APPER_PUBLIC_KEY
+  })
+}
 
 const proposalService = {
   async getAll() {
-    await delay(300)
-    return [...proposals]
+    try {
+      const apperClient = getApperClient()
+      const params = {
+        fields: [
+          { field: { Name: "Name" } },
+          { field: { Name: "Tags" } },
+          { field: { Name: "Owner" } },
+          { field: { Name: "rfp_id" } },
+          { field: { Name: "title" } },
+          { field: { Name: "budget" } },
+          { field: { Name: "created_date" } },
+          { field: { Name: "status" } }
+        ],
+        orderBy: [
+          {
+            fieldName: "created_date",
+            sorttype: "DESC"
+          }
+        ],
+        pagingInfo: {
+          limit: 50,
+          offset: 0
+        }
+      }
+      
+      const response = await apperClient.fetchRecords('proposal', params)
+      
+      if (!response.success) {
+        console.error(response.message)
+        toast.error(response.message)
+        return []
+      }
+
+      return response.data || []
+    } catch (error) {
+      console.error("Error fetching proposals:", error)
+      throw error
+    }
   },
 
   async getById(id) {
-    await delay(200)
-    const proposal = proposals.find(p => p.Id === parseInt(id))
-    if (!proposal) {
-      throw new Error('Proposal not found')
+    try {
+      const apperClient = getApperClient()
+      const params = {
+        fields: [
+          { field: { Name: "Name" } },
+          { field: { Name: "Tags" } },
+          { field: { Name: "Owner" } },
+          { field: { Name: "rfp_id" } },
+          { field: { Name: "title" } },
+          { field: { Name: "budget" } },
+          { field: { Name: "created_date" } },
+          { field: { Name: "status" } }
+        ]
+      }
+      
+      const response = await apperClient.getRecordById('proposal', parseInt(id), params)
+      
+      if (!response.success) {
+        console.error(response.message)
+        toast.error(response.message)
+        return null
+      }
+
+      return response.data
+    } catch (error) {
+      console.error(`Error fetching proposal with ID ${id}:`, error)
+      throw error
     }
-    return { ...proposal }
   },
 
   async create(proposalData) {
-    await delay(500)
-    const newId = proposals.length > 0 ? Math.max(...proposals.map(p => p.Id)) + 1 : 1
-    
-    const proposal = {
-      Id: newId,
-      rfpId: proposalData.rfpId,
-      title: proposalData.title || `Proposal ${newId}`,
-      sections: proposalData.sections || [],
-      budget: proposalData.budget || { total: 0, items: [], currency: 'USD' },
-      createdDate: new Date().toISOString(),
-      status: 'draft'
-    }
+    try {
+      const apperClient = getApperClient()
+      
+      const data = {
+        Name: proposalData.title || `Proposal ${Date.now()}`,
+        rfp_id: proposalData.rfpId || proposalData.rfp_id,
+        title: proposalData.title || `Proposal ${Date.now()}`,
+        budget: typeof proposalData.budget === 'string' ? proposalData.budget : JSON.stringify(proposalData.budget || { total: 0, items: [], currency: 'USD' }),
+        created_date: new Date().toISOString(),
+        status: proposalData.status || 'draft'
+      }
 
-    proposals.push(proposal)
-    return { ...proposal }
+      const createParams = {
+        records: [data]
+      }
+
+      const response = await apperClient.createRecord('proposal', createParams)
+      
+      if (!response.success) {
+        console.error(response.message)
+        toast.error(response.message)
+        throw new Error(response.message)
+      }
+
+      if (response.results) {
+        const successfulRecords = response.results.filter(result => result.success)
+        const failedRecords = response.results.filter(result => !result.success)
+        
+        if (failedRecords.length > 0) {
+          console.error(`Failed to create proposal:${JSON.stringify(failedRecords)}`)
+          
+          failedRecords.forEach(record => {
+            record.errors?.forEach(error => {
+              toast.error(`${error.fieldLabel}: ${error.message}`)
+            })
+            if (record.message) toast.error(record.message)
+          })
+          throw new Error('Failed to create proposal')
+        }
+        
+        if (successfulRecords.length > 0) {
+          const createdProposal = successfulRecords[0].data
+          // Add sections for compatibility if they were provided
+          if (proposalData.sections) {
+            createdProposal.sections = proposalData.sections
+          }
+          return createdProposal
+        }
+      }
+    } catch (error) {
+      console.error("Error creating proposal:", error)
+      throw error
+    }
   },
 
   async update(id, updates) {
-    await delay(300)
-    const index = proposals.findIndex(p => p.Id === parseInt(id))
-    if (index === -1) {
-      throw new Error('Proposal not found')
+    try {
+      const apperClient = getApperClient()
+      
+      const data = {
+        Id: parseInt(id),
+        title: updates.title,
+        budget: typeof updates.budget === 'string' ? updates.budget : JSON.stringify(updates.budget),
+        status: updates.status
+      }
+
+      // Only include fields that are being updated
+      Object.keys(data).forEach(key => {
+        if (data[key] === undefined) {
+          delete data[key]
+        }
+      })
+
+      const updateParams = {
+        records: [data]
+      }
+
+      const response = await apperClient.updateRecord('proposal', updateParams)
+      
+      if (!response.success) {
+        console.error(response.message)
+        toast.error(response.message)
+        throw new Error(response.message)
+      }
+
+      if (response.results) {
+        const successfulUpdates = response.results.filter(result => result.success)
+        const failedUpdates = response.results.filter(result => !result.success)
+        
+        if (failedUpdates.length > 0) {
+          console.error(`Failed to update proposal:${JSON.stringify(failedUpdates)}`)
+          
+          failedUpdates.forEach(record => {
+            record.errors?.forEach(error => {
+              toast.error(`${error.fieldLabel}: ${error.message}`)
+            })
+            if (record.message) toast.error(record.message)
+          })
+          throw new Error('Failed to update proposal')
+        }
+        
+        if (successfulUpdates.length > 0) {
+          const updatedProposal = successfulUpdates[0].data
+          // Preserve sections if they were provided in updates
+          if (updates.sections) {
+            updatedProposal.sections = updates.sections
+          }
+          return updatedProposal
+        }
+      }
+    } catch (error) {
+      console.error("Error updating proposal:", error)
+      throw error
     }
-    
-    proposals[index] = {
-      ...proposals[index],
-      ...updates,
-      updatedDate: new Date().toISOString()
-    }
-    
-    return { ...proposals[index] }
   },
 
   async delete(id) {
-    await delay(200)
-    const index = proposals.findIndex(p => p.Id === parseInt(id))
-    if (index === -1) {
-      throw new Error('Proposal not found')
+    try {
+      const apperClient = getApperClient()
+      const params = {
+        RecordIds: [parseInt(id)]
+      }
+      
+      const response = await apperClient.deleteRecord('proposal', params)
+      
+      if (!response.success) {
+        console.error(response.message)
+        toast.error(response.message)
+        return false
+      }
+
+      if (response.results) {
+        const failedDeletions = response.results.filter(result => !result.success)
+        
+        if (failedDeletions.length > 0) {
+          console.error(`Failed to delete proposal:${JSON.stringify(failedDeletions)}`)
+          
+          failedDeletions.forEach(record => {
+            if (record.message) toast.error(record.message)
+          })
+          return false
+        }
+        
+        return true
+      }
+    } catch (error) {
+      console.error("Error deleting proposal:", error)
+      throw error
     }
-    const deleted = proposals.splice(index, 1)[0]
-    return { ...deleted }
   },
 
   async generateFromRFP(rfpId, companyProfile) {
@@ -69,7 +244,7 @@ const proposalService = {
       {
         Id: 1,
         title: "Executive Summary",
-        content: `${companyProfile.name} is pleased to submit this proposal for your consideration. With ${companyProfile.yearsInBusiness || 5} years of experience in software development, we are confident in our ability to deliver exceptional results for your project.`,
+        content: `${companyProfile.name || 'Our company'} is pleased to submit this proposal for your consideration. With ${companyProfile.yearsInBusiness || 5} years of experience in software development, we are confident in our ability to deliver exceptional results for your project.`,
         order: 1,
         completed: true
       },

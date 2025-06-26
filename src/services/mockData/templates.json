@@ -1,0 +1,69 @@
+[
+  {
+    "Id": 1,
+    "name": "Software Development Proposal",
+    "description": "Comprehensive template for software development projects including technical specifications and project management sections.",
+    "category": "Technology",
+    "sections": [
+      {
+        "Id": 1,
+        "title": "Executive Summary",
+        "content": "Brief overview of your company and proposal highlights.",
+        "order": 1,
+        "required": true
+      },
+      {
+        "Id": 2,
+        "title": "Technical Approach",
+        "content": "Detailed technical methodology and implementation strategy.",
+        "order": 2,
+        "required": true
+      },
+      {
+        "Id": 3,
+        "title": "Project Timeline",
+        "content": "Phased timeline with milestones and deliverables.",
+        "order": 3,
+        "required": true
+      },
+      {
+        "Id": 4,
+        "title": "Budget Proposal",
+        "content": "Itemized cost breakdown and payment terms.",
+        "order": 4,
+        "required": true
+      }
+    ],
+    "createdDate": "2024-01-10T09:00:00Z"
+  },
+  {
+    "Id": 2,
+    "name": "Marketing Services Proposal",
+    "description": "Template for marketing and advertising service proposals with campaign strategy sections.",
+    "category": "Marketing",
+    "sections": [
+      {
+        "Id": 1,
+        "title": "Campaign Overview",
+        "content": "Strategic overview of proposed marketing campaign.",
+        "order": 1,
+        "required": true
+      },
+      {
+        "Id": 2,
+        "title": "Target Audience Analysis",
+        "content": "Detailed analysis of target demographics and market segments.",
+        "order": 2,
+        "required": true
+      },
+      {
+        "Id": 3,
+        "title": "Marketing Channels",
+        "content": "Multi-channel marketing approach and media strategy.",
+        "order": 3,
+        "required": true
+      }
+    ],
+    "createdDate": "2024-01-12T11:30:00Z"
+  }
+]

@@ -1,0 +1,45 @@
+[
+  {
+    "Id": 1,
+    "filename": "software-development-rfp.pdf",
+    "uploadDate": "2024-01-15T10:30:00Z",
+    "content": "Request for Proposal: Software Development Services\n\nProject Overview:\nWe are seeking a qualified software development partner to create a comprehensive web application...",
+    "sections": [
+      {
+        "Id": 1,
+        "title": "Project Overview",
+        "content": "This RFP seeks proposals for developing a customer management system with advanced reporting capabilities.",
+        "order": 1,
+        "required": true
+      },
+      {
+        "Id": 2,
+        "title": "Technical Requirements",
+        "content": "System must support 1000+ concurrent users, integrate with existing CRM, provide real-time analytics.",
+        "order": 2,
+        "required": true
+      },
+      {
+        "Id": 3,
+        "title": "Budget and Timeline",
+        "content": "Project budget: $75,000 - $125,000. Timeline: 8 months from contract execution.",
+        "order": 3,
+        "required": true
+      }
+    ],
+    "requirements": [
+      "Minimum 5 years software development experience",
+      "Portfolio of similar projects",
+      "Technical architecture documentation",
+      "Detailed project timeline",
+      "Itemized budget breakdown"
+    ],
+    "budgetInfo": {
+      "range": "$75,000 - $125,000",
+      "paymentTerms": "Net 30",
+      "currency": "USD",
+      "budgetType": "Fixed Price"
+    },
+    "status": "parsed"
+  }
+]

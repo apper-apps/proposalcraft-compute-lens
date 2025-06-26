@@ -1,13 +1,14 @@
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
 let rfpDocuments = []
-
 // Simulate file parsing service
 const parseDocument = async (file) => {
   await delay(2000) // Simulate processing time
   
+  const fileExt = file.name.split('.').pop()?.toLowerCase()
+  
   // Mock extracted content based on file type
-  const mockSections = [
+  let mockSections = [
     {
       Id: 1,
       title: "Project Overview",
@@ -38,13 +39,30 @@ const parseDocument = async (file) => {
     }
   ]
 
-  const mockRequirements = [
+  let mockRequirements = [
     "Minimum 5 years software development experience",
     "Portfolio of similar projects",
     "Technical architecture documentation",
     "Detailed project timeline",
     "Itemized budget breakdown"
   ]
+
+  // Enhanced content for Excel files
+  if (fileExt === 'xlsx' || fileExt === 'xls') {
+    mockSections.push({
+      Id: 5,
+      title: "Data Requirements",
+      content: "Excel file contains structured data requirements, reporting specifications, and data integration needs...",
+      order: 5,
+      required: true
+    })
+    
+    mockRequirements.push(
+      "Excel data processing capabilities",
+      "Automated reporting features",
+      "Data validation and integrity checks"
+    )
+  }
 
   const mockBudgetInfo = {
     range: "$50,000 - $100,000",
@@ -61,16 +79,58 @@ const parseDocument = async (file) => {
   }
 }
 
+// Process multiple files
+const uploadMultiple = async (files) => {
+  await delay(300)
+  
+  const results = []
+  let currentId = rfpDocuments.length > 0 ? Math.max(...rfpDocuments.map(d => d.Id)) + 1 : 1
+  
+  for (const file of files) {
+    try {
+      const parsedData = await parseDocument(file)
+      
+      const document = {
+        Id: currentId++,
+        filename: file.name,
+        uploadDate: new Date().toISOString(),
+        content: parsedData.content,
+        sections: parsedData.sections,
+        requirements: parsedData.requirements,
+        budgetInfo: parsedData.budgetInfo,
+        status: 'parsed'
+      }
+
+      rfpDocuments.push(document)
+      results.push({ ...document })
+    } catch (error) {
+      results.push({
+        filename: file.name,
+        error: error.message,
+        status: 'error'
+      })
+    }
+  }
+  
+  return results
+}
+
 const rfpDocumentService = {
-  async upload(file) {
+  async upload(files) {
+    // Handle both single file and multiple files
+    if (Array.isArray(files)) {
+      return await uploadMultiple(files)
+    }
+    
+    // Single file upload
     await delay(300)
     
-    const parsedData = await parseDocument(file)
+    const parsedData = await parseDocument(files)
     const newId = rfpDocuments.length > 0 ? Math.max(...rfpDocuments.map(d => d.Id)) + 1 : 1
     
     const document = {
       Id: newId,
-      filename: file.name,
+      filename: files.name,
       uploadDate: new Date().toISOString(),
       content: parsedData.content,
       sections: parsedData.sections,

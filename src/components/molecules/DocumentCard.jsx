@@ -5,11 +5,12 @@ import Badge from '@/components/atoms/Badge'
 import Button from '@/components/atoms/Button'
 
 const DocumentCard = ({ document, onView, onDelete, onCreateProposal }) => {
-  const getFileIcon = (filename) => {
+const getFileIcon = (filename) => {
     const ext = filename.split('.').pop()?.toLowerCase()
     switch (ext) {
       case 'pdf': return 'FileText'
       case 'docx': case 'doc': return 'FileType'
+      case 'xlsx': case 'xls': return 'Spreadsheet'
       case 'txt': return 'File'
       default: return 'File'
     }

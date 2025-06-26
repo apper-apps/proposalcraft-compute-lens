@@ -38,19 +38,31 @@ const Upload = () => {
     }
   }
 
-  const handleFileUpload = async (file) => {
-    if (!file) return
+const handleFileUpload = async (files) => {
+    if (!files) return
 
-    // Validate file type
-    const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain']
-    if (!allowedTypes.includes(file.type)) {
-      toast.error('Please upload a PDF, DOCX, or TXT file')
+    // Handle both single file and array of files
+    const fileArray = Array.isArray(files) ? files : [files]
+    
+    // Validate file types
+    const allowedTypes = [
+      'application/pdf', 
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'text/plain'
+    ]
+    
+    const invalidFiles = fileArray.filter(file => !allowedTypes.includes(file.type))
+    if (invalidFiles.length > 0) {
+      toast.error('Please upload PDF, DOCX, XLSX, XLS, or TXT files only')
       return
     }
 
-    // Validate file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('File size must be less than 10MB')
+    // Validate file sizes (max 10MB each)
+    const oversizedFiles = fileArray.filter(file => file.size > 10 * 1024 * 1024)
+    if (oversizedFiles.length > 0) {
+      toast.error('Each file must be less than 10MB')
       return
     }
 
@@ -69,13 +81,29 @@ const Upload = () => {
         })
       }, 200)
 
-      const uploadedDoc = await rfpDocumentService.upload(file)
+      const results = await rfpDocumentService.upload(fileArray.length === 1 ? fileArray[0] : fileArray)
       
       clearInterval(progressInterval)
       setUploadProgress(100)
       
-      toast.success('Document uploaded and parsed successfully!')
-      setDocuments(prev => [uploadedDoc, ...prev])
+      // Handle results (single file or multiple files)
+      if (Array.isArray(results)) {
+        const successCount = results.filter(r => !r.error).length
+        const errorCount = results.filter(r => r.error).length
+        
+        if (successCount > 0) {
+          toast.success(`${successCount} document${successCount > 1 ? 's' : ''} uploaded successfully!`)
+          const validResults = results.filter(r => !r.error)
+          setDocuments(prev => [...validResults, ...prev])
+        }
+        
+        if (errorCount > 0) {
+          toast.error(`${errorCount} document${errorCount > 1 ? 's' : ''} failed to upload`)
+        }
+      } else {
+        toast.success('Document uploaded and parsed successfully!')
+        setDocuments(prev => [results, ...prev])
+      }
       
       // Reset progress after a delay
       setTimeout(() => {
@@ -83,7 +111,7 @@ const Upload = () => {
       }, 1000)
       
     } catch (error) {
-      toast.error('Failed to upload document')
+      toast.error('Failed to upload documents')
       console.error('Upload error:', error)
     } finally {
       setUploading(false)
@@ -174,11 +202,11 @@ const Upload = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
       >
-        <FileUploadZone 
+<FileUploadZone 
           onFileSelect={handleFileUpload}
-          accept=".pdf,.docx,.txt"
+          accept=".pdf,.docx,.xlsx,.xls,.txt"
+          multiple={true}
         />
-        
         {/* Upload Progress */}
         {uploading && (
           <motion.div
@@ -190,11 +218,11 @@ const Upload = () => {
               <ApperIcon name="Upload" className="w-5 h-5 text-primary" />
               <span className="font-medium text-secondary">Processing document...</span>
             </div>
-            <ProgressBar value={uploadProgress} showValue className="mb-2" />
+<ProgressBar value={uploadProgress} showValue className="mb-2" />
             <p className="text-sm text-surface-600">
-              {uploadProgress < 30 && "Uploading file..."}
-              {uploadProgress >= 30 && uploadProgress < 70 && "Extracting content..."}
-              {uploadProgress >= 70 && uploadProgress < 90 && "Analyzing structure..."}
+              {uploadProgress < 30 && "Uploading files..."}
+              {uploadProgress >= 30 && uploadProgress < 70 && "Processing documents..."}
+              {uploadProgress >= 70 && uploadProgress < 90 && "Extracting content..."}
               {uploadProgress >= 90 && "Finalizing..."}
             </p>
           </motion.div>
@@ -214,11 +242,11 @@ const Upload = () => {
         </div>
 
         {documents.length === 0 ? (
-          <EmptyState
+<EmptyState
             title="No documents uploaded yet"
-            description="Upload your first RFP document to get started with proposal generation. Supported formats: PDF, DOCX, TXT"
+            description="Upload your RFP documents to get started with proposal generation. Supported formats: PDF, DOCX, XLSX, XLS, TXT"
             icon="Upload"
-            actionLabel="Upload Document"
+            actionLabel="Upload Documents"
             onAction={() => document.getElementById('file-input')?.click()}
           />
         ) : (

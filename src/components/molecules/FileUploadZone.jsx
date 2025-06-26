@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import ApperIcon from '@/components/ApperIcon'
 import Button from '@/components/atoms/Button'
 
-const FileUploadZone = ({ onFileSelect, accept = '.pdf,.docx,.txt', multiple = false }) => {
+const FileUploadZone = ({ onFileSelect, accept = '.pdf,.docx,.xlsx,.xls,.txt', multiple = false }) => {
   const [isDragging, setIsDragging] = useState(false)
   const [dragCounter, setDragCounter] = useState(0)
 
@@ -84,14 +84,14 @@ const FileUploadZone = ({ onFileSelect, accept = '.pdf,.docx,.txt', multiple = f
         </motion.div>
         
         <div>
-          <h3 className="text-lg font-semibold text-secondary mb-2">
-            {isDragging ? 'Drop your files here' : 'Upload RFP Document'}
+<h3 className="text-lg font-semibold text-secondary mb-2">
+            {isDragging ? 'Drop your files here' : multiple ? 'Upload RFP Documents' : 'Upload RFP Document'}
           </h3>
           <p className="text-surface-600 mb-4">
             Drag and drop your RFP files here, or click to browse
           </p>
           <p className="text-sm text-surface-500">
-            Supports: PDF, DOCX, TXT files
+            Supports: PDF, DOCX, XLSX, XLS, TXT files
           </p>
         </div>
         

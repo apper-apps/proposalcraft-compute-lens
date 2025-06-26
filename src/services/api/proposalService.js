@@ -88,11 +88,52 @@ const proposalService = {
     try {
       const apperClient = getApperClient()
       
+// Validate and truncate budget field to meet 255 character database limit
+      function validateBudgetField(budget) {
+        let budgetString;
+        
+        if (typeof budget === 'string') {
+          budgetString = budget;
+        } else {
+          budgetString = JSON.stringify(budget || { total: 0, items: [], currency: 'USD' });
+        }
+        
+        // Check if budget exceeds 255 character limit
+        if (budgetString.length > 255) {
+          // Try to create a summary version
+          let budgetObj;
+          try {
+            budgetObj = typeof budget === 'string' ? JSON.parse(budget) : budget;
+          } catch (e) {
+            // If parsing fails, truncate the string
+            return budgetString.substring(0, 250) + '...';
+          }
+          
+          // Create summary with just total and currency
+          const summary = {
+            total: budgetObj.total || 0,
+            currency: budgetObj.currency || 'USD',
+            itemCount: (budgetObj.items && budgetObj.items.length) || 0
+          };
+          
+          const summaryString = JSON.stringify(summary);
+          
+          // If even the summary is too long, fallback to basic info
+          if (summaryString.length > 255) {
+            return `{"total":${budgetObj.total || 0},"currency":"${budgetObj.currency || 'USD'}"}`;
+          }
+          
+          return summaryString;
+        }
+        
+        return budgetString;
+      }
+
       const data = {
         Name: proposalData.title || `Proposal ${Date.now()}`,
         rfp_id: proposalData.rfpId || proposalData.rfp_id,
         title: proposalData.title || `Proposal ${Date.now()}`,
-        budget: typeof proposalData.budget === 'string' ? proposalData.budget : JSON.stringify(proposalData.budget || { total: 0, items: [], currency: 'USD' }),
+        budget: validateBudgetField(proposalData.budget),
         created_date: new Date().toISOString(),
         status: proposalData.status || 'draft'
       }
@@ -144,10 +185,10 @@ const proposalService = {
     try {
       const apperClient = getApperClient()
       
-      const data = {
+const data = {
         Id: parseInt(id),
         title: updates.title,
-        budget: typeof updates.budget === 'string' ? updates.budget : JSON.stringify(updates.budget),
+        budget: validateBudgetField(updates.budget),
         status: updates.status
       }
 
